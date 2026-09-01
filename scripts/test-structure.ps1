@@ -31,6 +31,15 @@ if (-not (Test-Path .\AGENTS.md)) {
 }
 
 Write-Host ""
+Write-Host "=== Test 4: settings.xml exists at project root ==="
+if (Test-Path .\settings.xml) {
+    Write-Host "[PASS] settings.xml exists at root"
+} else {
+    Write-Host "[FAIL] settings.xml missing at root"
+    $pass = $false
+}
+
+Write-Host ""
 if ($pass) {
     Write-Host "All tests passed."
     exit 0

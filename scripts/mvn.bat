@@ -3,4 +3,4 @@ setlocal
 set JAVA_HOME=E:\Tools\jdk-17
 set MAVEN_HOME=E:\Tools\apache-maven-3.9.9
 set PATH=%JAVA_HOME%\bin;%MAVEN_HOME%\bin;%PATH%
-%MAVEN_HOME%\bin\mvn.cmd -s ..\settings.xml %*
+%MAVEN_HOME%\bin\mvn.cmd %*
