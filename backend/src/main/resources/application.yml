@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: scheduling
+  datasource:
+    url: jdbc:mysql://localhost:3306/scheduling?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: scheduling-system-jwt-secret-key-2026-0123456789abcdef
+  expire-minutes: 720
+
+logging:
+  level:
+    com.example.scheduling: info
