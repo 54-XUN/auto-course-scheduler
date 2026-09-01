@@ -25,7 +25,10 @@ request.interceptors.response.use(
       if (status === 401) {
         const authStore = useAuthStore()
         authStore.clearSession()
-        ElMessage.error('登录已过期，请重新登录')
+        // 未登录时查询当前用户返回 401 是正常流程，不弹窗
+        if (error.config.url !== '/auth/me') {
+          ElMessage.error('登录已过期，请重新登录')
+        }
       } else {
         ElMessage.error(message)
       }
