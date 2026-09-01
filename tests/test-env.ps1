@@ -4,7 +4,7 @@
 $pass = $true
 
 Write-Host "=== Test 1: java.bat -version ==="
-$out = & ".\bin\java.bat" -version 2>&1 | Out-String
+$out = & "..\scripts\java.bat" -version 2>&1 | Out-String
 if ($out -match "openjdk" -and $LASTEXITCODE -eq 0) {
     Write-Host "[PASS] Java version output contains 'openjdk' (exit code 0)"
 } else {
@@ -14,7 +14,7 @@ if ($out -match "openjdk" -and $LASTEXITCODE -eq 0) {
 
 Write-Host ""
 Write-Host "=== Test 2: mvn.bat -version ==="
-$out = & ".\bin\mvn.bat" -version 2>&1 | Out-String
+$out = & "..\scripts\mvn.bat" -version 2>&1 | Out-String
 if ($out -match "Apache Maven" -and $LASTEXITCODE -eq 0) {
     Write-Host "[PASS] Maven version output contains 'Apache Maven' (exit code 0)"
 } else {

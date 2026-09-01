@@ -4,7 +4,7 @@
 $pass = $true
 
 Write-Host "=== Test 1: .trae/rules/AGENTS.md exists ==="
-if (Test-Path .\.trae\rules\AGENTS.md) {
+if (Test-Path ..\.trae\rules\AGENTS.md) {
     Write-Host "[PASS] .trae/rules/AGENTS.md exists"
 } else {
     Write-Host "[FAIL] .trae/rules/AGENTS.md not found"
@@ -13,7 +13,7 @@ if (Test-Path .\.trae\rules\AGENTS.md) {
 
 Write-Host ""
 Write-Host "=== Test 2: AGENTS.md content has 'AGENTS' header ==="
-$content = Get-Content .\.trae\rules\AGENTS.md -Raw
+$content = Get-Content ..\.trae\rules\AGENTS.md -Raw
 if ($content -match "# AGENTS") {
     Write-Host "[PASS] AGENTS.md contains '# AGENTS'"
 } else {
@@ -23,7 +23,7 @@ if ($content -match "# AGENTS") {
 
 Write-Host ""
 Write-Host "=== Test 3: Old AGENTS.md removed from root ==="
-if (-not (Test-Path .\AGENTS.md)) {
+if (-not (Test-Path ..\AGENTS.md)) {
     Write-Host "[PASS] root AGENTS.md removed"
 } else {
     Write-Host "[FAIL] root AGENTS.md still exists"
@@ -32,7 +32,7 @@ if (-not (Test-Path .\AGENTS.md)) {
 
 Write-Host ""
 Write-Host "=== Test 4: settings.xml exists at project root ==="
-if (Test-Path .\settings.xml) {
+if (Test-Path ..\settings.xml) {
     Write-Host "[PASS] settings.xml exists at root"
 } else {
     Write-Host "[FAIL] settings.xml missing at root"
