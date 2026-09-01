@@ -1,4 +1,4 @@
-# 一键启动排课系统（后端 + 前端）
+﻿# 一键启动排课系统（后端 + 前端）
 $ErrorActionPreference = "Stop"
 
 # 项目根目录
@@ -13,7 +13,7 @@ $env:DB_PASSWORD = "root123"
 $env:DEFAULT_ADMIN_PASSWORD = "admin123"
 
 function Test-PortInUse($port) {
-    $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+    $conn = Get-NetTCPConnection -LocalPort $port -State Listen, Established -ErrorAction SilentlyContinue
     return $conn -ne $null
 }
 
@@ -52,14 +52,12 @@ Start-Process powershell -ArgumentList @("-NoExit", "-Command", $backendCmd) -Wi
 # 等待后端就绪
 Write-Host "等待后端启动..." -ForegroundColor Cyan
 $ready = $false
-for ($i = 0; $i -lt 60; $i++) {
-    try {
-        Invoke-RestMethod -Uri "http://localhost:8080/api/auth/me" -Method GET -TimeoutSec 2 | Out-Null
+for ($i = 0; $i -lt 120; $i++) {
+    if (Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue) {
         $ready = $true
         break
-    } catch {
-        Start-Sleep -Milliseconds 500
     }
+    Start-Sleep -Milliseconds 500
 }
 if (-not $ready) {
     Write-Host "后端启动超时，请检查后端窗口中的错误信息。" -ForegroundColor Red
@@ -75,14 +73,12 @@ Start-Process powershell -ArgumentList @("-NoExit", "-Command", $frontendCmd) -W
 # 等待前端就绪
 Write-Host "等待前端启动..." -ForegroundColor Cyan
 $ready = $false
-for ($i = 0; $i -lt 60; $i++) {
-    try {
-        Invoke-RestMethod -Uri "http://localhost:5173" -Method GET -TimeoutSec 2 | Out-Null
+for ($i = 0; $i -lt 120; $i++) {
+    if (Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue) {
         $ready = $true
         break
-    } catch {
-        Start-Sleep -Milliseconds 500
     }
+    Start-Sleep -Milliseconds 500
 }
 if (-not $ready) {
     Write-Host "前端启动超时，请检查前端窗口中的错误信息。" -ForegroundColor Red
