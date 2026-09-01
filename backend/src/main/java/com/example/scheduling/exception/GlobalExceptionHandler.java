@@ -40,6 +40,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ApiResponse<Void> handleOther(Exception e) {
         log.error("系统异常", e);
-        return ApiResponse.error(500, "系统内部错误：" + e.getMessage());
+        return ApiResponse.error(500, "系统内部错误，请联系管理员");
     }
 }

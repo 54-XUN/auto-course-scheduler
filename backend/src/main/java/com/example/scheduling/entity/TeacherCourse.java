@@ -12,7 +12,9 @@ import lombok.Setter;
 
 /** 教师可教课程关联 */
 @Entity
-@Table(name = "teacher_course")
+@Table(name = "teacher_course", uniqueConstraints = {
+    @jakarta.persistence.UniqueConstraint(columnNames = {"teacherId", "courseId"})
+})
 @Getter
 @Setter
 @NoArgsConstructor

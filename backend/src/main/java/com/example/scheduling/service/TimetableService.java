@@ -16,6 +16,7 @@ import com.example.scheduling.repository.TeacherRepository;
 import com.example.scheduling.repository.TimeSlotRepository;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -82,15 +83,22 @@ public class TimetableService {
             return dto;
         }
 
-        Map<Long, Teacher> teacherMap = teacherRepository.findAll().stream()
+        // 只加载相关的关联数据，避免全量加载
+        Set<Long> teacherIds = schedules.stream().map(Schedule::getTeacherId).collect(Collectors.toSet());
+        Set<Long> classIds = schedules.stream().map(Schedule::getClassId).collect(Collectors.toSet());
+        Set<Long> courseIds = schedules.stream().map(Schedule::getCourseId).collect(Collectors.toSet());
+        Set<Long> roomIds = schedules.stream().map(Schedule::getClassroomId).collect(Collectors.toSet());
+        Set<Long> slotIds = schedules.stream().map(Schedule::getTimeSlotId).collect(Collectors.toSet());
+
+        Map<Long, Teacher> teacherMap = teacherRepository.findAllById(teacherIds).stream()
                 .collect(Collectors.toMap(Teacher::getId, Function.identity()));
-        Map<Long, ClassInfo> classMap = classInfoRepository.findAll().stream()
+        Map<Long, ClassInfo> classMap = classInfoRepository.findAllById(classIds).stream()
                 .collect(Collectors.toMap(ClassInfo::getId, Function.identity()));
-        Map<Long, Course> courseMap = courseRepository.findAll().stream()
+        Map<Long, Course> courseMap = courseRepository.findAllById(courseIds).stream()
                 .collect(Collectors.toMap(Course::getId, Function.identity()));
-        Map<Long, Classroom> roomMap = classroomRepository.findAll().stream()
+        Map<Long, Classroom> roomMap = classroomRepository.findAllById(roomIds).stream()
                 .collect(Collectors.toMap(Classroom::getId, Function.identity()));
-        Map<Long, TimeSlot> slotMap = timeSlotRepository.findAll().stream()
+        Map<Long, TimeSlot> slotMap = timeSlotRepository.findAllById(slotIds).stream()
                 .collect(Collectors.toMap(TimeSlot::getId, Function.identity()));
 
         for (Schedule s : schedules) {

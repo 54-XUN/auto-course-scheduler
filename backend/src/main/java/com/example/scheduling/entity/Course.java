@@ -17,7 +17,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "course")
+@Table(name = "course", uniqueConstraints = {
+    @jakarta.persistence.UniqueConstraint(columnNames = {"code"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,6 +31,7 @@ public class Course {
 
     @NotBlank(message = "课程编号不能为空")
     @Size(max = 32, message = "课程编号长度不能超过32")
+    @Column(unique = true)
     private String code;
 
     @NotBlank(message = "课程名称不能为空")

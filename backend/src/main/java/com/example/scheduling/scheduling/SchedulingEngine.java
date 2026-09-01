@@ -1,5 +1,6 @@
 package com.example.scheduling.scheduling;
 
+import com.example.scheduling.entity.ClassCourse;
 import com.example.scheduling.entity.ClassInfo;
 import com.example.scheduling.entity.Classroom;
 import com.example.scheduling.entity.Course;
@@ -44,6 +45,8 @@ public class SchedulingEngine {
     private final List<Teacher> teachers;
     /** courseId -> 可教该课程的教师ID集合 */
     private final Map<Long, Set<Long>> teachable;
+    /** 班级-课程对应关系：classId -> List<ClassCourse> */
+    private final Map<Long, List<ClassCourse>> classCourses;
 
     private final ConflictChecker checker;
     private final List<Placement> placements = new ArrayList<>();
@@ -54,13 +57,15 @@ public class SchedulingEngine {
                             List<Course> courses,
                             List<Classroom> classrooms,
                             List<TimeSlot> timeSlots,
-                            Map<Long, Set<Long>> teachable) {
+                            Map<Long, Set<Long>> teachable,
+                            Map<Long, List<ClassCourse>> classCourses) {
         this.teachers = teachers;
         this.classes = classes;
         this.courses = courses;
         this.classrooms = classrooms;
         this.timeSlots = timeSlots;
         this.teachable = teachable;
+        this.classCourses = classCourses;
         this.checker = new ConflictChecker(timeSlots, classes, classrooms, teachable);
     }
 
@@ -79,12 +84,32 @@ public class SchedulingEngine {
     private List<Task> buildTasks() {
         List<Task> tasks = new ArrayList<>();
         for (ClassInfo ci : classes) {
-            for (Course c : courses) {
-                for (int i = 0; i < c.getWeeklyHours(); i++) {
-                    tasks.add(new Task(ci.getId(), c.getId()));
+            List<ClassCourse> classCourseList = classCourses.getOrDefault(ci.getId(), List.of());
+            if (classCourseList.isEmpty()) {
+                // 如果班级没有配置课程，跳过
+                continue;
+            }
+            
+            for (ClassCourse classCourse : classCourseList) {
+                Course course = courses.stream()
+                        .filter(c -> c.getId().equals(classCourse.getCourseId()))
+                        .findFirst()
+                        .orElse(null);
+                
+                if (course == null) {
+                    continue; // 跳过不存在的课程
+                }
+                
+                // 使用关联中指定的周学时，如果为空则使用课程默认周学时
+                int weeklyHours = classCourse.getWeeklyHours() != null ? 
+                        classCourse.getWeeklyHours() : course.getWeeklyHours();
+                
+                for (int i = 0; i < weeklyHours; i++) {
+                    tasks.add(new Task(ci.getId(), course.getId()));
                 }
             }
         }
+        
         Map<Long, Integer> roomCountByClass = new HashMap<>();
         for (ClassInfo ci : classes) {
             int n = (int) classrooms.stream()

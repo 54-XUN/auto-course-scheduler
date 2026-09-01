@@ -3,6 +3,7 @@ package com.example.scheduling.service;
 import com.example.scheduling.dto.AutoScheduleResponse;
 import com.example.scheduling.dto.ScheduleDTO;
 import com.example.scheduling.dto.ScheduleMoveRequest;
+import com.example.scheduling.entity.ClassCourse;
 import com.example.scheduling.entity.ClassInfo;
 import com.example.scheduling.entity.Classroom;
 import com.example.scheduling.entity.Course;
@@ -11,6 +12,7 @@ import com.example.scheduling.entity.Teacher;
 import com.example.scheduling.entity.TeacherCourse;
 import com.example.scheduling.entity.TimeSlot;
 import com.example.scheduling.exception.BusinessException;
+import com.example.scheduling.repository.ClassCourseRepository;
 import com.example.scheduling.repository.ClassInfoRepository;
 import com.example.scheduling.repository.ClassroomRepository;
 import com.example.scheduling.repository.CourseRepository;
@@ -42,6 +44,7 @@ public class ScheduleService {
     private final ClassroomRepository classroomRepository;
     private final TimeSlotRepository timeSlotRepository;
     private final TeacherCourseRepository teacherCourseRepository;
+    private final ClassCourseRepository classCourseRepository;
 
     public ScheduleService(ScheduleRepository scheduleRepository,
                            TeacherRepository teacherRepository,
@@ -49,7 +52,8 @@ public class ScheduleService {
                            CourseRepository courseRepository,
                            ClassroomRepository classroomRepository,
                            TimeSlotRepository timeSlotRepository,
-                           TeacherCourseRepository teacherCourseRepository) {
+                           TeacherCourseRepository teacherCourseRepository,
+                           ClassCourseRepository classCourseRepository) {
         this.scheduleRepository = scheduleRepository;
         this.teacherRepository = teacherRepository;
         this.classInfoRepository = classInfoRepository;
@@ -57,6 +61,7 @@ public class ScheduleService {
         this.classroomRepository = classroomRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.teacherCourseRepository = teacherCourseRepository;
+        this.classCourseRepository = classCourseRepository;
     }
 
     /** 自动排课：校验数据完备性 → 事务内清空旧结果 → 贪心+回溯求解 → 写入 */
@@ -76,6 +81,14 @@ public class ScheduleService {
         for (TeacherCourse tc : teacherCourseRepository.findAll()) {
             teachable.computeIfAbsent(tc.getCourseId(), k -> new HashSet<>()).add(tc.getTeacherId());
         }
+        
+        // 构建班级-课程映射
+        Map<Long, List<ClassCourse>> classCourses = new HashMap<>();
+        for (ClassInfo ci : classes) {
+            List<ClassCourse> coursesForClass = classCourseRepository.findByClassId(ci.getId());
+            classCourses.put(ci.getId(), coursesForClass);
+        }
+        
         for (Course course : courses) {
             if (teachable.getOrDefault(course.getId(), Set.of()).isEmpty()) {
                 throw new BusinessException("课程「" + course.getName() + "」没有任何教师可教，请先在教师管理中设置可教课程");
@@ -89,7 +102,7 @@ public class ScheduleService {
             }
         }
 
-        SchedulingEngine engine = new SchedulingEngine(teachers, classes, courses, classrooms, timeSlots, teachable);
+        SchedulingEngine engine = new SchedulingEngine(teachers, classes, courses, classrooms, timeSlots, teachable, classCourses);
         SchedulingResult result = engine.run();
         if (!result.success()) {
             throw new BusinessException(409, result.message());
@@ -181,8 +194,45 @@ public class ScheduleService {
         s.setClassroomId(room.getId());
         scheduleRepository.save(s);
 
-        List<ScheduleDTO> list = list();
-        return list.stream().filter(d -> d.getId().equals(id)).findFirst()
-                .orElseThrow(() -> new BusinessException(500, "调课后数据加载失败"));
+        return findById(id);
+    }
+    
+    /** 根据ID查询排课结果（含关联名称） */
+    public ScheduleDTO findById(Long id) {
+        Schedule s = scheduleRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(404, "排课记录不存在"));
+        
+        Map<Long, Teacher> teacherMap = teacherRepository.findAll().stream()
+                .collect(Collectors.toMap(Teacher::getId, Function.identity()));
+        Map<Long, ClassInfo> classMap = classInfoRepository.findAll().stream()
+                .collect(Collectors.toMap(ClassInfo::getId, Function.identity()));
+        Map<Long, Course> courseMap = courseRepository.findAll().stream()
+                .collect(Collectors.toMap(Course::getId, Function.identity()));
+        Map<Long, Classroom> roomMap = classroomRepository.findAll().stream()
+                .collect(Collectors.toMap(Classroom::getId, Function.identity()));
+        Map<Long, TimeSlot> slotMap = timeSlotRepository.findAll().stream()
+                .collect(Collectors.toMap(TimeSlot::getId, Function.identity()));
+
+        ScheduleDTO dto = new ScheduleDTO();
+        dto.setId(s.getId());
+        dto.setClassId(s.getClassId());
+        dto.setTeacherId(s.getTeacherId());
+        dto.setCourseId(s.getCourseId());
+        dto.setClassroomId(s.getClassroomId());
+        dto.setTimeSlotId(s.getTimeSlotId());
+        ClassInfo ci = classMap.get(s.getClassId());
+        Teacher t = teacherMap.get(s.getTeacherId());
+        Course c = courseMap.get(s.getCourseId());
+        Classroom r = roomMap.get(s.getClassroomId());
+        TimeSlot ts = slotMap.get(s.getTimeSlotId());
+        dto.setClassName(ci != null ? ci.getName() : "-");
+        dto.setTeacherName(t != null ? t.getName() : "-");
+        dto.setCourseName(c != null ? c.getName() : "-");
+        dto.setClassroomName(r != null ? r.getName() : "-");
+        if (ts != null) {
+            dto.setWeekDay(ts.getWeekDay());
+            dto.setSection(ts.getSection());
+        }
+        return dto;
     }
 }

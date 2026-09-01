@@ -105,10 +105,11 @@ async function refreshSchedules() {
 }
 
 /** 前端冲突预检：检查目标时间段上教师/班级/教室是否被其他记录占用 */
-function preCheck(schedule, targetSlotId) {
+function preCheck(schedule, targetSlotId, excludeScheduleIds = []) {
   if (targetSlotId == null) return null
-  const others = allSchedules.value.filter((s) => s.id !== schedule.scheduleId)
-  const busy = others.find((s) => s.timeSlotId === targetSlotId)
+  const others = allSchedules.value.filter((s) => 
+    !excludeScheduleIds.includes(s.scheduleId)
+  )
   const conflicts = others.filter((s) => s.timeSlotId === targetSlotId)
   const teacherConflict = conflicts.find((s) => s.teacherId === schedule.teacherId)
   const classConflict = conflicts.find((s) => s.classId === schedule.classId)
@@ -130,31 +131,42 @@ async function handleMove({ source, target, targetTo }) {
     return
   }
 
-  // 预检源课程移到目标位置
-  const err1 = preCheck(source, targetSlotId)
-  if (err1) {
-    ElMessage.warning(`调课冲突：${err1}`)
-    return
-  }
-
   if (target) {
-    // 交换：目标课程先移到源位置，预检反向冲突
+    // 交换场景：需要排除源课程和目标课程
+    const excludeIds = [source.scheduleId, target.scheduleId]
+    
+    // 预检源课程移到目标位置
+    const err1 = preCheck(source, targetSlotId, excludeIds)
+    if (err1) {
+      ElMessage.warning(`调课冲突：${err1}`)
+      return
+    }
+
+    // 目标课程先移到源位置，预检反向冲突
     const sourceSlotId = slotIdOf({ weekDay: source.weekDay, section: source.section })
-    const err2 = preCheck(target, sourceSlotId)
+    const err2 = preCheck(target, sourceSlotId, excludeIds)
     if (err2) {
       ElMessage.warning(`调课冲突：${err2}`)
       return
     }
+    
     await ElMessageBox.confirm(
       `确定交换「${source.courseName}」与「${target.courseName}」吗？`,
       '交换课程',
       { type: 'warning' }
     )
     // 先移走目标课程到源位置，再把源课程移到目标位置
-    await doMove(target.scheduleId, sourceSlotId, target.classroomId)
-    await doMove(source.scheduleId, targetSlotId, source.classroomId)
+    await doMove(target.scheduleId, sourceSlotId, source.classroomId)
+    await doMove(source.scheduleId, targetSlotId, target.classroomId)
     ElMessage.success('交换成功')
   } else {
+    // 预检源课程移到目标位置（仅排除源课程）
+    const err1 = preCheck(source, targetSlotId, [source.scheduleId])
+    if (err1) {
+      ElMessage.warning(`调课冲突：${err1}`)
+      return
+    }
+    
     await ElMessageBox.confirm(
       `确定将「${source.courseName}」调整到 ${dayNames[targetTo.weekDay]} 第 ${targetTo.section} 节吗？`,
       '调整课程',

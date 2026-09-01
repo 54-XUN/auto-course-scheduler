@@ -5,9 +5,9 @@ spring:
   application:
     name: scheduling
   datasource:
-    url: jdbc:mysql://localhost:3306/scheduling?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: root123
+    url: ${DB_URL:jdbc:mysql://localhost:3306/scheduling?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -19,8 +19,13 @@ spring:
         format_sql: true
 
 jwt:
-  secret: scheduling-system-jwt-secret-key-2026-0123456789abcdef
+  secret: ${JWT_SECRET:}
   expire-minutes: 720
+
+# 默认管理员密码（仅在首次启动数据库为空时使用）
+default:
+  admin:
+    password: ${DEFAULT_ADMIN_PASSWORD:}
 
 logging:
   level:

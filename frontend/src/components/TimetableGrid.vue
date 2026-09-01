@@ -92,8 +92,6 @@ function canDrop(weekDay, section) {
   const from = dragging.value
   return !(from.weekDay === weekDay && from.section === section)
 }
-
-defineExpose({ ElMessage })
 </script>
 
 <style scoped>

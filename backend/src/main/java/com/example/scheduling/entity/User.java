@@ -1,5 +1,6 @@
 package com.example.scheduling.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,7 +13,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "sys_user")
+@Table(name = "sys_user", uniqueConstraints = {
+    @jakarta.persistence.UniqueConstraint(columnNames = {"username"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,6 +27,7 @@ public class User {
 
     @NotBlank
     @Size(max = 64)
+    @Column(unique = true)
     private String username;
 
     @NotBlank

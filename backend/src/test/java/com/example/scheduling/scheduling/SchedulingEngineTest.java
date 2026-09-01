@@ -32,8 +32,15 @@ class SchedulingEngineTest {
         Map<Long, Set<Long>> teachable = new HashMap<>();
         teachable.put(100L, Set.of(1L));
         teachable.put(101L, Set.of(2L));
+        
+        // 为兼容性提供空的班级-课程映射（使用默认行为）
+        Map<Long, List<com.example.scheduling.entity.ClassCourse>> classCourses = new HashMap<>();
+        classCourses.put(10L, List.of(
+            new com.example.scheduling.entity.ClassCourse(10L, 100L, 4),
+            new com.example.scheduling.entity.ClassCourse(10L, 101L, 2)
+        ));
 
-        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable).run();
+        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable, classCourses).run();
 
         assertTrue(result.success(), "应能找到可行解: " + result.message());
         assertEquals(6, result.placements().size(), "周学时守恒：4 + 2 = 6 节");
@@ -68,8 +75,12 @@ class SchedulingEngineTest {
         List<Classroom> rooms = List.of(room(200L, 40), room(201L, 40));
         List<TimeSlot> slots = buildSlots(5, 8);
         Map<Long, Set<Long>> teachable = Map.of(100L, Set.of(1L));
+        
+        Map<Long, List<com.example.scheduling.entity.ClassCourse>> classCourses = new HashMap<>();
+        classCourses.put(10L, List.of(new com.example.scheduling.entity.ClassCourse(10L, 100L, 4)));
+        classCourses.put(11L, List.of(new com.example.scheduling.entity.ClassCourse(11L, 100L, 4)));
 
-        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable).run();
+        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable, classCourses).run();
 
         assertTrue(result.success());
         assertEquals(8, result.placements().size());
@@ -87,8 +98,11 @@ class SchedulingEngineTest {
         List<Classroom> rooms = List.of(room(200L, 30));
         List<TimeSlot> slots = buildSlots(5, 8);
         Map<Long, Set<Long>> teachable = Map.of(100L, Set.of(1L));
+        
+        Map<Long, List<com.example.scheduling.entity.ClassCourse>> classCourses = new HashMap<>();
+        classCourses.put(10L, List.of(new com.example.scheduling.entity.ClassCourse(10L, 100L, 2)));
 
-        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable).run();
+        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable, classCourses).run();
 
         assertFalse(result.success(), "资源不足应返回无解");
         assertTrue(result.placements().isEmpty());
@@ -103,8 +117,12 @@ class SchedulingEngineTest {
         List<Classroom> rooms = List.of(room(200L, 40));
         List<TimeSlot> slots = buildSlots(2, 4); // 仅 8 个时间段
         Map<Long, Set<Long>> teachable = Map.of(100L, Set.of(1L));
+        
+        Map<Long, List<com.example.scheduling.entity.ClassCourse>> classCourses = new HashMap<>();
+        classCourses.put(10L, List.of(new com.example.scheduling.entity.ClassCourse(10L, 100L, 4)));
+        classCourses.put(11L, List.of(new com.example.scheduling.entity.ClassCourse(11L, 100L, 4)));
 
-        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable).run();
+        SchedulingResult result = new SchedulingEngine(teachers, classes, courses, rooms, slots, teachable, classCourses).run();
 
         assertTrue(result.success(), "8 个时段排 8 节课应可行: " + result.message());
         assertEquals(8, result.placements().size());

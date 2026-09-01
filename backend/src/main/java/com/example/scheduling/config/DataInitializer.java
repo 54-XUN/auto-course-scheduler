@@ -16,6 +16,7 @@ import com.example.scheduling.repository.TimeSlotRepository;
 import com.example.scheduling.repository.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -37,6 +38,9 @@ public class DataInitializer implements ApplicationRunner {
     private final ClassroomRepository classroomRepository;
     private final TeacherCourseRepository teacherCourseRepository;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    
+    @Value("${DEFAULT_ADMIN_PASSWORD:}")
+    private String defaultAdminPassword;
 
     public DataInitializer(UserRepository userRepository,
                            TimeSlotRepository timeSlotRepository,
@@ -68,9 +72,14 @@ public class DataInitializer implements ApplicationRunner {
 
     private void initAdmin() {
         if (userRepository.count() == 0) {
+            // 如果未设置默认密码，则不创建管理员，要求手动创建
+            if (defaultAdminPassword == null || defaultAdminPassword.isEmpty()) {
+                return;
+            }
+            
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(encoder.encode("123456"));
+            admin.setPassword(encoder.encode(defaultAdminPassword));
             admin.setRole("ADMIN");
             userRepository.save(admin);
         }

@@ -72,12 +72,30 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const token = localStorage.getItem('token')
+  
+  // 基础token格式验证（JWT格式：header.payload.signature）
+  const isValidToken = (token) => {
+    if (!token || typeof token !== 'string') return false
+    const parts = token.split('.')
+    return parts.length === 3 && parts.every(part => part.length > 0)
+  }
+  
   if (to.path !== '/login' && !token) {
     return '/login'
   }
+  
+  if (to.path !== '/login' && token && !isValidToken(token)) {
+    // Token格式无效，清除无效token并跳转到登录页
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('role')
+    return '/login'
+  }
+  
   if (to.path === '/login' && token) {
     return '/'
   }
+  
   document.title = to.meta.title ? `${to.meta.title} - 自动排课系统` : '自动排课系统'
   return true
 })
