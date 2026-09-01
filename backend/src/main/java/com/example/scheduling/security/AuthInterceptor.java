@@ -39,7 +39,8 @@ public class AuthInterceptor implements HandlerInterceptor {
             return reject(response);
         }
 
-        String role = String.valueOf(claims.get("role"));
+        Object roleClaim = claims.get("role");
+        String role = roleClaim != null ? roleClaim.toString() : null;
         request.setAttribute(ATTR_USERNAME, claims.getSubject());
         request.setAttribute(ATTR_ROLE, role);
 

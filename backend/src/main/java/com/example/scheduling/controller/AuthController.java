@@ -50,6 +50,8 @@ public class AuthController {
         if (claims == null) {
             return ApiResponse.error(401, "未登录或登录已过期");
         }
-        return ApiResponse.ok(new UserInfoResponse(claims.getSubject(), String.valueOf(claims.get("role"))));
+        Object roleClaim = claims.get("role");
+        String role = roleClaim != null ? roleClaim.toString() : null;
+        return ApiResponse.ok(new UserInfoResponse(claims.getSubject(), role));
     }
 }

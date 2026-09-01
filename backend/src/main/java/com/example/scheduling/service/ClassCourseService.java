@@ -40,8 +40,14 @@ public class ClassCourseService {
                 .collect(Collectors.toMap(Course::getId, Function.identity()));
 
         return list.stream()
-                .sorted(Comparator.comparing((ClassCourse cc) -> classMap.getOrDefault(cc.getClassId(), new ClassInfo()).getCode())
-                        .thenComparing(cc -> courseMap.getOrDefault(cc.getCourseId(), new Course()).getCode()))
+                .sorted(Comparator.comparing((ClassCourse cc) -> {
+                            ClassInfo ci = classMap.get(cc.getClassId());
+                            return ci != null ? ci.getCode() : "";
+                        }, Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(cc -> {
+                            Course c = courseMap.get(cc.getCourseId());
+                            return c != null ? c.getCode() : "";
+                        }, Comparator.nullsFirst(Comparator.naturalOrder())))
                 .map(cc -> toDTO(cc, classMap.get(cc.getClassId()), courseMap.get(cc.getCourseId())))
                 .collect(Collectors.toList());
     }

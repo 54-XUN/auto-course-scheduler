@@ -199,18 +199,24 @@ public class DataInitializer implements ApplicationRunner {
         if (teacherCourseRepository.count() > 0) {
             return;
         }
-        Teacher zhang = teacherRepository.findByCode("T001").orElseThrow();
-        Teacher li = teacherRepository.findByCode("T002").orElseThrow();
-        Teacher wang = teacherRepository.findByCode("T003").orElseThrow();
-        Teacher zhao = teacherRepository.findByCode("T004").orElseThrow();
-        Teacher liu = teacherRepository.findByCode("T005").orElseThrow();
+        Teacher zhang = teacherRepository.findByCode("T001").orElse(null);
+        Teacher li = teacherRepository.findByCode("T002").orElse(null);
+        Teacher wang = teacherRepository.findByCode("T003").orElse(null);
+        Teacher zhao = teacherRepository.findByCode("T004").orElse(null);
+        Teacher liu = teacherRepository.findByCode("T005").orElse(null);
 
-        Course chinese = courseRepository.findByCode("K001").orElseThrow();
-        Course math = courseRepository.findByCode("K002").orElseThrow();
-        Course english = courseRepository.findByCode("K003").orElseThrow();
-        Course physics = courseRepository.findByCode("K004").orElseThrow();
-        Course chemistry = courseRepository.findByCode("K005").orElseThrow();
-        Course music = courseRepository.findByCode("K006").orElseThrow();
+        Course chinese = courseRepository.findByCode("K001").orElse(null);
+        Course math = courseRepository.findByCode("K002").orElse(null);
+        Course english = courseRepository.findByCode("K003").orElse(null);
+        Course physics = courseRepository.findByCode("K004").orElse(null);
+        Course chemistry = courseRepository.findByCode("K005").orElse(null);
+        Course music = courseRepository.findByCode("K006").orElse(null);
+
+        if (zhang == null || li == null || wang == null || zhao == null || liu == null
+                || chinese == null || math == null || english == null || physics == null
+                || chemistry == null || music == null) {
+            return;
+        }
 
         List<TeacherCourse> associations = List.of(
                 new TeacherCourse(zhang.getId(), chinese.getId()),
@@ -231,17 +237,23 @@ public class DataInitializer implements ApplicationRunner {
         if (classCourseRepository.count() > 0) {
             return;
         }
-        ClassInfo c1 = classInfoRepository.findByCode("C001").orElseThrow();
-        ClassInfo c2 = classInfoRepository.findByCode("C002").orElseThrow();
-        ClassInfo c3 = classInfoRepository.findByCode("C003").orElseThrow();
-        ClassInfo c4 = classInfoRepository.findByCode("C004").orElseThrow();
+        ClassInfo c1 = classInfoRepository.findByCode("C001").orElse(null);
+        ClassInfo c2 = classInfoRepository.findByCode("C002").orElse(null);
+        ClassInfo c3 = classInfoRepository.findByCode("C003").orElse(null);
+        ClassInfo c4 = classInfoRepository.findByCode("C004").orElse(null);
 
-        Course chinese = courseRepository.findByCode("K001").orElseThrow();
-        Course math = courseRepository.findByCode("K002").orElseThrow();
-        Course english = courseRepository.findByCode("K003").orElseThrow();
-        Course physics = courseRepository.findByCode("K004").orElseThrow();
-        Course chemistry = courseRepository.findByCode("K005").orElseThrow();
-        Course music = courseRepository.findByCode("K006").orElseThrow();
+        Course chinese = courseRepository.findByCode("K001").orElse(null);
+        Course math = courseRepository.findByCode("K002").orElse(null);
+        Course english = courseRepository.findByCode("K003").orElse(null);
+        Course physics = courseRepository.findByCode("K004").orElse(null);
+        Course chemistry = courseRepository.findByCode("K005").orElse(null);
+        Course music = courseRepository.findByCode("K006").orElse(null);
+
+        if (c1 == null || c2 == null || c3 == null || c4 == null
+                || chinese == null || math == null || english == null
+                || physics == null || chemistry == null || music == null) {
+            return;
+        }
 
         List<ClassCourse> associations = List.of(
                 new ClassCourse(c1.getId(), chinese.getId(), 4),

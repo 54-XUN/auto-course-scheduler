@@ -2,6 +2,7 @@ package com.example.scheduling.service;
 
 import com.example.scheduling.entity.Course;
 import com.example.scheduling.exception.BusinessException;
+import com.example.scheduling.repository.ClassCourseRepository;
 import com.example.scheduling.repository.CourseRepository;
 import com.example.scheduling.repository.ScheduleRepository;
 import com.example.scheduling.repository.TeacherCourseRepository;
@@ -16,13 +17,16 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final ScheduleRepository scheduleRepository;
     private final TeacherCourseRepository teacherCourseRepository;
+    private final ClassCourseRepository classCourseRepository;
 
     public CourseService(CourseRepository courseRepository,
                          ScheduleRepository scheduleRepository,
-                         TeacherCourseRepository teacherCourseRepository) {
+                         TeacherCourseRepository teacherCourseRepository,
+                         ClassCourseRepository classCourseRepository) {
         this.courseRepository = courseRepository;
         this.scheduleRepository = scheduleRepository;
         this.teacherCourseRepository = teacherCourseRepository;
+        this.classCourseRepository = classCourseRepository;
     }
 
     public List<Course> list() {
@@ -63,6 +67,7 @@ public class CourseService {
             throw new BusinessException("该课程已被排课结果引用，请先清除相关排课");
         }
         teacherCourseRepository.deleteByCourseId(id);
+        classCourseRepository.deleteByCourseId(id);
         courseRepository.deleteById(id);
     }
 }

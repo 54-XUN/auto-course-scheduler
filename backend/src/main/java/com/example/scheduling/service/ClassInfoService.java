@@ -2,6 +2,7 @@ package com.example.scheduling.service;
 
 import com.example.scheduling.entity.ClassInfo;
 import com.example.scheduling.exception.BusinessException;
+import com.example.scheduling.repository.ClassCourseRepository;
 import com.example.scheduling.repository.ClassInfoRepository;
 import com.example.scheduling.repository.ScheduleRepository;
 import java.util.Comparator;
@@ -14,10 +15,14 @@ public class ClassInfoService {
 
     private final ClassInfoRepository classInfoRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ClassCourseRepository classCourseRepository;
 
-    public ClassInfoService(ClassInfoRepository classInfoRepository, ScheduleRepository scheduleRepository) {
+    public ClassInfoService(ClassInfoRepository classInfoRepository,
+                            ScheduleRepository scheduleRepository,
+                            ClassCourseRepository classCourseRepository) {
         this.classInfoRepository = classInfoRepository;
         this.scheduleRepository = scheduleRepository;
+        this.classCourseRepository = classCourseRepository;
     }
 
     public List<ClassInfo> list() {
@@ -56,6 +61,7 @@ public class ClassInfoService {
         if (scheduleRepository.existsByClassId(id)) {
             throw new BusinessException("该班级已被排课结果引用，请先清除相关排课");
         }
+        classCourseRepository.deleteByClassId(id);
         classInfoRepository.deleteById(id);
     }
 }

@@ -74,8 +74,8 @@ public class ScheduleService {
         List<Classroom> classrooms = classroomRepository.findAll();
         List<TimeSlot> timeSlots = timeSlotRepository.findAll();
 
-        if (classes.isEmpty() || courses.isEmpty() || classrooms.isEmpty() || timeSlots.isEmpty()) {
-            throw new BusinessException(409, "基础数据不完整，请先维护班级、课程、教室与时间段数据");
+        if (teachers.isEmpty() || classes.isEmpty() || courses.isEmpty() || classrooms.isEmpty() || timeSlots.isEmpty()) {
+            throw new BusinessException(409, "基础数据不完整，请先维护教师、班级、课程、教室与时间段数据");
         }
 
         Map<Long, Set<Long>> teachable = new HashMap<>();
@@ -107,6 +107,9 @@ public class ScheduleService {
         SchedulingResult result = engine.run();
         if (!result.success()) {
             throw new BusinessException(409, result.message());
+        }
+        if (result.placements().isEmpty()) {
+            throw new BusinessException(409, "未产生任何排课结果，请检查约束条件是否过强");
         }
 
         scheduleRepository.deleteAllInBatch();
@@ -201,15 +204,30 @@ public class ScheduleService {
         if (conflictIds.size() == 1) {
             Schedule other = scheduleRepository.findById(conflictIds.iterator().next())
                     .orElseThrow(() -> new BusinessException("调课冲突：目标排课记录不存在"));
-            // 仅当冲突记录与当前记录教师、班级、教室均相同（同一门课的不同节次）时允许交换
-            if (!other.getTeacherId().equals(s.getTeacherId())
-                    || !other.getClassId().equals(s.getClassId())
-                    || !other.getClassroomId().equals(s.getClassroomId())) {
-                throw new BusinessException("调课冲突：目标位置已被其他排课占用");
+            // 允许与目标位置的单一冲突记录交换教室/时间：将对方移到当前记录的源位置
+            ClassInfo otherClass = classInfoRepository.findById(other.getClassId())
+                    .orElseThrow(() -> new BusinessException("调课冲突：对方班级数据缺失"));
+            Classroom sourceRoom = classroomRepository.findById(s.getClassroomId())
+                    .orElseThrow(() -> new BusinessException("调课冲突：源教室数据缺失"));
+            if (otherClass.getStudentCount() > sourceRoom.getCapacity()) {
+                throw new BusinessException("调课冲突：对方班级人数超过源教室容量");
             }
-            other.setTimeSlotId(s.getTimeSlotId());
-            other.setClassroomId(s.getClassroomId());
-            scheduleRepository.save(other);
+            // 检查源位置是否可容纳对方（排除当前记录本身与对方记录）
+            for (Schedule existing : scheduleRepository.findByTimeSlotId(s.getTimeSlotId())) {
+                if (existing.getId().equals(s.getId()) || existing.getId().equals(other.getId())) {
+                    continue;
+                }
+                if (existing.getTeacherId().equals(other.getTeacherId())
+                        || existing.getClassId().equals(other.getClassId())
+                        || existing.getClassroomId().equals(s.getClassroomId())) {
+                    throw new BusinessException("调课冲突：源位置无法容纳对方排课");
+                }
+            }
+            // 原子交换，避免唯一约束在双更新过程中出现中间冲突
+            scheduleRepository.swapPositions(
+                    s.getId(), slot.getId(), room.getId(),
+                    other.getId(), s.getTimeSlotId(), s.getClassroomId());
+            return findById(id);
         }
 
         s.setTimeSlotId(slot.getId());
