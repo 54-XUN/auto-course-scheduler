@@ -9,6 +9,16 @@ const request = axios.create({
   withCredentials: true
 })
 
+request.interceptors.request.use((config) => {
+  const authStore = useAuthStore()
+  // 登录后后端同时返回 token 与设置 Cookie；优先使用 Cookie，
+  // 但在 Cookie 无法写入的预览/沙箱环境中使用 Authorization 头兜底
+  if (authStore.token && authStore.token !== 'cookie') {
+    config.headers.Authorization = `Bearer ${authStore.token}`
+  }
+  return config
+})
+
 request.interceptors.response.use(
   (response) => {
     const res = response.data
