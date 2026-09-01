@@ -1,5 +1,6 @@
 package com.example.scheduling.security;
 
+import com.example.scheduling.IntegrationTest;
 import com.example.scheduling.dto.ApiResponse;
 import com.example.scheduling.entity.User;
 import com.example.scheduling.repository.UserRepository;
@@ -18,10 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
-public class SecurityTest {
+public class SecurityTest extends IntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

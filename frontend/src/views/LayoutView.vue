@@ -48,6 +48,7 @@ const menus = [
   { path: '/teachers', title: '教师管理', icon: 'User' },
   { path: '/classes', title: '班级管理', icon: 'OfficeBuilding' },
   { path: '/courses', title: '课程管理', icon: 'Reading' },
+  { path: '/class-courses', title: '班级课程', icon: 'Collection' },
   { path: '/classrooms', title: '教室管理', icon: 'School' },
   { path: '/time-slots', title: '时间段管理', icon: 'Clock' },
   { path: '/schedules', title: '排课管理', icon: 'Calendar' },

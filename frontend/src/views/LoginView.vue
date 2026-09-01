@@ -44,6 +44,8 @@ async function handleLogin() {
     await authStore.login(form.username, form.password)
     ElMessage.success('登录成功')
     router.push('/')
+  } catch (e) {
+    ElMessage.error(e.message || '登录失败')
   } finally {
     loading.value = false
   }

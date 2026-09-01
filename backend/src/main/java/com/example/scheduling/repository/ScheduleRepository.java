@@ -2,6 +2,7 @@ package com.example.scheduling.repository;
 
 import com.example.scheduling.entity.Schedule;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
@@ -24,7 +25,13 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     boolean existsByTimeSlotIdAndTeacherIdAndIdNot(Long timeSlotId, Long teacherId, Long id);
 
+    Optional<Schedule> findByTimeSlotIdAndTeacherIdAndIdNot(Long timeSlotId, Long teacherId, Long id);
+
     boolean existsByTimeSlotIdAndClassIdAndIdNot(Long timeSlotId, Long classId, Long id);
 
+    Optional<Schedule> findByTimeSlotIdAndClassIdAndIdNot(Long timeSlotId, Long classId, Long id);
+
     boolean existsByTimeSlotIdAndClassroomIdAndIdNot(Long timeSlotId, Long classroomId, Long id);
+
+    Optional<Schedule> findByTimeSlotIdAndClassroomIdAndIdNot(Long timeSlotId, Long classroomId, Long id);
 }

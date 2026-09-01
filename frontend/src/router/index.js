@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const routes = [
   {
@@ -37,6 +38,12 @@ const routes = [
         meta: { title: '课程管理', icon: 'Reading' }
       },
       {
+        path: 'class-courses',
+        name: 'classCourses',
+        component: () => import('../views/ClassCourseView.vue'),
+        meta: { title: '班级课程', icon: 'Collection' }
+      },
+      {
         path: 'classrooms',
         name: 'classrooms',
         component: () => import('../views/ClassroomView.vue'),
@@ -71,31 +78,16 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const token = localStorage.getItem('token')
-  
-  // 基础token格式验证（JWT格式：header.payload.signature）
-  const isValidToken = (token) => {
-    if (!token || typeof token !== 'string') return false
-    const parts = token.split('.')
-    return parts.length === 3 && parts.every(part => part.length > 0)
-  }
-  
-  if (to.path !== '/login' && !token) {
+  const authStore = useAuthStore()
+
+  if (to.path !== '/login' && !authStore.isLoggedIn) {
     return '/login'
   }
-  
-  if (to.path !== '/login' && token && !isValidToken(token)) {
-    // Token格式无效，清除无效token并跳转到登录页
-    localStorage.removeItem('token')
-    localStorage.removeItem('username')
-    localStorage.removeItem('role')
-    return '/login'
-  }
-  
-  if (to.path === '/login' && token) {
+
+  if (to.path === '/login' && authStore.isLoggedIn) {
     return '/'
   }
-  
+
   document.title = to.meta.title ? `${to.meta.title} - 自动排课系统` : '自动排课系统'
   return true
 })

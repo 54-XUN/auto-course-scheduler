@@ -1,20 +1,19 @@
 package com.example.scheduling.entity;
 
+import com.example.scheduling.IntegrationTest;
 import com.example.scheduling.repository.*;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceException;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 @Transactional
-public class EntityConstraintsTest {
+public class EntityConstraintsTest extends IntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
@@ -173,7 +172,7 @@ public class EntityConstraintsTest {
         Schedule schedule = new Schedule();
         
         // 不设置必填字段
-        assertThrows(PersistenceException.class, () -> entityManager.persist(schedule));
+        assertThrows(ConstraintViolationException.class, () -> entityManager.persist(schedule));
     }
 
     @Test

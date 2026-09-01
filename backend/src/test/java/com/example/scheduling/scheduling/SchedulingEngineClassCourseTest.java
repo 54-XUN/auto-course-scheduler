@@ -1,11 +1,11 @@
 package com.example.scheduling.scheduling;
 
+import com.example.scheduling.IntegrationTest;
 import com.example.scheduling.entity.*;
 import com.example.scheduling.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -13,9 +13,8 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 @Transactional
-public class SchedulingEngineClassCourseTest {
+public class SchedulingEngineClassCourseTest extends IntegrationTest {
 
     @Autowired
     private TeacherRepository teacherRepository;

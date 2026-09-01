@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -74,7 +75,7 @@ public class ScheduleService {
         List<TimeSlot> timeSlots = timeSlotRepository.findAll();
 
         if (classes.isEmpty() || courses.isEmpty() || classrooms.isEmpty() || timeSlots.isEmpty()) {
-            throw new BusinessException("基础数据不完整，请先维护班级、课程、教室与时间段数据");
+            throw new BusinessException(409, "基础数据不完整，请先维护班级、课程、教室与时间段数据");
         }
 
         Map<Long, Set<Long>> teachable = new HashMap<>();
@@ -180,14 +181,35 @@ public class ScheduleService {
             throw new BusinessException("教室容量不足：班级 " + ci.getStudentCount() + " 人 > 教室容量 " + room.getCapacity() + " 人");
         }
 
-        if (scheduleRepository.existsByTimeSlotIdAndTeacherIdAndIdNot(slot.getId(), s.getTeacherId(), id)) {
-            throw new BusinessException("调课冲突：该教师在此时间段已有课程");
+        // 查找目标位置的潜在交换对象
+        Optional<Schedule> teacherConflict = scheduleRepository
+                .findByTimeSlotIdAndTeacherIdAndIdNot(slot.getId(), s.getTeacherId(), id);
+        Optional<Schedule> classConflict = scheduleRepository
+                .findByTimeSlotIdAndClassIdAndIdNot(slot.getId(), s.getClassId(), id);
+        Optional<Schedule> roomConflict = scheduleRepository
+                .findByTimeSlotIdAndClassroomIdAndIdNot(slot.getId(), room.getId(), id);
+
+        Set<Long> conflictIds = new HashSet<>();
+        teacherConflict.ifPresent(o -> conflictIds.add(o.getId()));
+        classConflict.ifPresent(o -> conflictIds.add(o.getId()));
+        roomConflict.ifPresent(o -> conflictIds.add(o.getId()));
+
+        if (conflictIds.size() > 1) {
+            throw new BusinessException("调课冲突：目标位置存在多条无法交换的排课");
         }
-        if (scheduleRepository.existsByTimeSlotIdAndClassIdAndIdNot(slot.getId(), s.getClassId(), id)) {
-            throw new BusinessException("调课冲突：该班级在此时间段已有课程");
-        }
-        if (scheduleRepository.existsByTimeSlotIdAndClassroomIdAndIdNot(slot.getId(), room.getId(), id)) {
-            throw new BusinessException("调课冲突：该教室在此时间段已被占用");
+
+        if (conflictIds.size() == 1) {
+            Schedule other = scheduleRepository.findById(conflictIds.iterator().next())
+                    .orElseThrow(() -> new BusinessException("调课冲突：目标排课记录不存在"));
+            // 仅当冲突记录与当前记录教师、班级、教室均相同（同一门课的不同节次）时允许交换
+            if (!other.getTeacherId().equals(s.getTeacherId())
+                    || !other.getClassId().equals(s.getClassId())
+                    || !other.getClassroomId().equals(s.getClassroomId())) {
+                throw new BusinessException("调课冲突：目标位置已被其他排课占用");
+            }
+            other.setTimeSlotId(s.getTimeSlotId());
+            other.setClassroomId(s.getClassroomId());
+            scheduleRepository.save(other);
         }
 
         s.setTimeSlotId(slot.getId());
@@ -201,17 +223,12 @@ public class ScheduleService {
     public ScheduleDTO findById(Long id) {
         Schedule s = scheduleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "排课记录不存在"));
-        
-        Map<Long, Teacher> teacherMap = teacherRepository.findAll().stream()
-                .collect(Collectors.toMap(Teacher::getId, Function.identity()));
-        Map<Long, ClassInfo> classMap = classInfoRepository.findAll().stream()
-                .collect(Collectors.toMap(ClassInfo::getId, Function.identity()));
-        Map<Long, Course> courseMap = courseRepository.findAll().stream()
-                .collect(Collectors.toMap(Course::getId, Function.identity()));
-        Map<Long, Classroom> roomMap = classroomRepository.findAll().stream()
-                .collect(Collectors.toMap(Classroom::getId, Function.identity()));
-        Map<Long, TimeSlot> slotMap = timeSlotRepository.findAll().stream()
-                .collect(Collectors.toMap(TimeSlot::getId, Function.identity()));
+
+        ClassInfo ci = classInfoRepository.findById(s.getClassId()).orElse(null);
+        Teacher t = teacherRepository.findById(s.getTeacherId()).orElse(null);
+        Course c = courseRepository.findById(s.getCourseId()).orElse(null);
+        Classroom r = classroomRepository.findById(s.getClassroomId()).orElse(null);
+        TimeSlot ts = timeSlotRepository.findById(s.getTimeSlotId()).orElse(null);
 
         ScheduleDTO dto = new ScheduleDTO();
         dto.setId(s.getId());
@@ -220,11 +237,6 @@ public class ScheduleService {
         dto.setCourseId(s.getCourseId());
         dto.setClassroomId(s.getClassroomId());
         dto.setTimeSlotId(s.getTimeSlotId());
-        ClassInfo ci = classMap.get(s.getClassId());
-        Teacher t = teacherMap.get(s.getTeacherId());
-        Course c = courseMap.get(s.getCourseId());
-        Classroom r = roomMap.get(s.getClassroomId());
-        TimeSlot ts = slotMap.get(s.getTimeSlotId());
         dto.setClassName(ci != null ? ci.getName() : "-");
         dto.setTeacherName(t != null ? t.getName() : "-");
         dto.setCourseName(c != null ? c.getName() : "-");

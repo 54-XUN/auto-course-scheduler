@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
-import { login as loginApi } from '../api/auth'
+import { login as loginApi, getMe } from '../api/auth'
 import router from '../router'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: localStorage.getItem('token') || '',
-    username: localStorage.getItem('username') || '',
-    role: localStorage.getItem('role') || ''
+    token: '',
+    username: '',
+    role: ''
   }),
   getters: {
     isLoggedIn: (state) => !!state.token
@@ -17,18 +17,27 @@ export const useAuthStore = defineStore('auth', {
       this.token = data.token
       this.username = data.username
       this.role = data.role
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('username', data.username)
-      localStorage.setItem('role', data.role)
     },
-    logout() {
+    clearSession() {
       this.token = ''
       this.username = ''
       this.role = ''
-      localStorage.removeItem('token')
-      localStorage.removeItem('username')
-      localStorage.removeItem('role')
+    },
+    logout() {
+      this.clearSession()
       router.push('/login')
+    },
+    async init() {
+      try {
+        const data = await getMe()
+        this.username = data.username
+        this.role = data.role
+        this.token = 'cookie'
+      } catch {
+        this.token = ''
+        this.username = ''
+        this.role = ''
+      }
     }
   }
 })

@@ -1,5 +1,6 @@
 package com.example.scheduling.config;
 
+import com.example.scheduling.entity.ClassCourse;
 import com.example.scheduling.entity.ClassInfo;
 import com.example.scheduling.entity.Classroom;
 import com.example.scheduling.entity.Course;
@@ -7,6 +8,7 @@ import com.example.scheduling.entity.Teacher;
 import com.example.scheduling.entity.TeacherCourse;
 import com.example.scheduling.entity.TimeSlot;
 import com.example.scheduling.entity.User;
+import com.example.scheduling.repository.ClassCourseRepository;
 import com.example.scheduling.repository.ClassInfoRepository;
 import com.example.scheduling.repository.ClassroomRepository;
 import com.example.scheduling.repository.CourseRepository;
@@ -19,6 +21,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 排课结果表 schedule 不预置数据，由排课算法产生。
  */
 @Component
+@ConditionalOnProperty(name = "data.initializer.enabled", havingValue = "true", matchIfMissing = true)
 public class DataInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
@@ -37,9 +41,10 @@ public class DataInitializer implements ApplicationRunner {
     private final CourseRepository courseRepository;
     private final ClassroomRepository classroomRepository;
     private final TeacherCourseRepository teacherCourseRepository;
+    private final ClassCourseRepository classCourseRepository;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     
-    @Value("${DEFAULT_ADMIN_PASSWORD:}")
+    @Value("${default.admin.password:}")
     private String defaultAdminPassword;
 
     public DataInitializer(UserRepository userRepository,
@@ -48,7 +53,8 @@ public class DataInitializer implements ApplicationRunner {
                            ClassInfoRepository classInfoRepository,
                            CourseRepository courseRepository,
                            ClassroomRepository classroomRepository,
-                           TeacherCourseRepository teacherCourseRepository) {
+                           TeacherCourseRepository teacherCourseRepository,
+                           ClassCourseRepository classCourseRepository) {
         this.userRepository = userRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.teacherRepository = teacherRepository;
@@ -56,6 +62,7 @@ public class DataInitializer implements ApplicationRunner {
         this.courseRepository = courseRepository;
         this.classroomRepository = classroomRepository;
         this.teacherCourseRepository = teacherCourseRepository;
+        this.classCourseRepository = classCourseRepository;
     }
 
     @Override
@@ -68,6 +75,7 @@ public class DataInitializer implements ApplicationRunner {
         initCourses();
         initClassrooms();
         initTeachable();
+        initClassCourses();
     }
 
     private void initAdmin() {
@@ -213,5 +221,44 @@ public class DataInitializer implements ApplicationRunner {
                 new TeacherCourse(zhao.getId(), chemistry.getId()),
                 new TeacherCourse(liu.getId(), music.getId()));
         teacherCourseRepository.saveAll(associations);
+    }
+
+    /**
+     * 班级课程关联：为每个班级配置默认课程与周学时。
+     * 确保首次自动排课能产生非空结果。
+     */
+    private void initClassCourses() {
+        if (classCourseRepository.count() > 0) {
+            return;
+        }
+        ClassInfo c1 = classInfoRepository.findByCode("C001").orElseThrow();
+        ClassInfo c2 = classInfoRepository.findByCode("C002").orElseThrow();
+        ClassInfo c3 = classInfoRepository.findByCode("C003").orElseThrow();
+        ClassInfo c4 = classInfoRepository.findByCode("C004").orElseThrow();
+
+        Course chinese = courseRepository.findByCode("K001").orElseThrow();
+        Course math = courseRepository.findByCode("K002").orElseThrow();
+        Course english = courseRepository.findByCode("K003").orElseThrow();
+        Course physics = courseRepository.findByCode("K004").orElseThrow();
+        Course chemistry = courseRepository.findByCode("K005").orElseThrow();
+        Course music = courseRepository.findByCode("K006").orElseThrow();
+
+        List<ClassCourse> associations = List.of(
+                new ClassCourse(c1.getId(), chinese.getId(), 4),
+                new ClassCourse(c1.getId(), math.getId(), 4),
+                new ClassCourse(c1.getId(), english.getId(), 3),
+                new ClassCourse(c2.getId(), chinese.getId(), 4),
+                new ClassCourse(c2.getId(), math.getId(), 4),
+                new ClassCourse(c2.getId(), english.getId(), 3),
+                new ClassCourse(c2.getId(), physics.getId(), 2),
+                new ClassCourse(c3.getId(), chinese.getId(), 4),
+                new ClassCourse(c3.getId(), math.getId(), 4),
+                new ClassCourse(c3.getId(), english.getId(), 3),
+                new ClassCourse(c3.getId(), chemistry.getId(), 2),
+                new ClassCourse(c4.getId(), chinese.getId(), 4),
+                new ClassCourse(c4.getId(), math.getId(), 4),
+                new ClassCourse(c4.getId(), english.getId(), 3),
+                new ClassCourse(c4.getId(), music.getId(), 1));
+        classCourseRepository.saveAll(associations);
     }
 }
