@@ -99,28 +99,4 @@ MVP 阶段**只做管理员**，教师/学生页留接口。
 
 ---
 
-## 5. 技术栈
-
-### 5.1 前端
-- **框架**：Vue 3 (Composition API)
-- **UI 库**：Element Plus
-- **构建**：Vite
-- **HTTP**：Axios
-- **路由**：Vue Router
-- **状态**：Pinia
-
-### 5.2 后端
-- **框架**：Spring Boot 3.3
-- **ORM**：Spring Data JPA
-- **数据库**：MySQL 8.0
-- **构建**：Maven 3.9
-- **JDK**：17
-- **依赖注入**：Spring IoC
-- **验证**：Jakarta Validation
-- **工具**：Lombok
-
-### 5.3 工具链
-- **代码仓库**：Git
-- **包管理**：Maven（后端）、npm（前端）
-- **Maven 镜像**：阿里云（国内加速）
-- **数据库客户端**：MySQL Workbench / Navicat
+> **技术实现详见**：[TECH.md](./TECH.md) — 包含完整技术选型、架构设计、数据库表结构、排课算法、接口规范、安全边界、测试策略与实施顺序
