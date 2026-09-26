@@ -3,7 +3,6 @@ package com.example.scheduling.security;
 import com.example.scheduling.IntegrationTest;
 import com.example.scheduling.entity.User;
 import com.example.scheduling.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +21,6 @@ public class SecurityTest extends IntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private ObjectMapper objectMapper;
     @Autowired
     private JwtUtil jwtUtil;
 
