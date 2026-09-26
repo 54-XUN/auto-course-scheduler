@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import com.example.scheduling.dto.ApiResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
