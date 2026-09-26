@@ -13,6 +13,3 @@ frontend/dist/
 
 # Logs
 *.log
-
-# SSH keys
-.ssh/
