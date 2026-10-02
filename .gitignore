@@ -10,6 +10,7 @@ frontend/dist/
 .idea/
 .vscode/
 *.iml
+.trae/
 
 # Logs
 *.log
